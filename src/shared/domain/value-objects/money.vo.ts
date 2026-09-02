@@ -1,3 +1,5 @@
+import { DomainException } from "../exceptions/domain.exception";
+
 export class Money {
     private constructor(
         private readonly amount: number,
@@ -6,7 +8,7 @@ export class Money {
 
     static create(amount: number, currency: string = 'USD'): Money {
         if (amount < 0) {
-            throw new Error('Amount must be positive');
+            throw new DomainException('Amount must be positive');
         }
 
         const normalized = Math.round(amount * 100) / 100;

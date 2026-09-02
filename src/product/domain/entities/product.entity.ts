@@ -2,6 +2,7 @@ import { AggregateRoot } from "src/shared/domain/aggregate-root";
 import { ProductId } from "../value-objects/product-id.vo";
 import { Sku } from "../value-objects/sku.vo";
 import { Money } from "src/shared/domain/value-objects/money.vo";
+import { DomainException } from "src/shared/domain/exceptions/domain.exception";
 
 export interface ProductProps {
     id: ProductId;
@@ -116,13 +117,13 @@ export class Product extends AggregateRoot {
 
     private static validateName(name: string): void {
         if (name.length < 3) {
-            throw new Error('Product name must be at least 3 characters long');
+            throw new DomainException('Product name must be at least 3 characters long');
         }
     }
 
     private static validateStock(stock: number): void {
         if (stock < 0) {
-            throw new Error('Product stock must be a non-negative number');
+            throw new DomainException('Product stock must be a non-negative number');
         }
     }
 }
