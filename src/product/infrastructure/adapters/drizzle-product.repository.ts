@@ -88,6 +88,10 @@ export class DrizzleProductRepository implements ProductRepository {
         return productRows.map((row) => DrizzleProductRepository.toDomain(row));
     }
 
+    async delete(id: ProductId): Promise<void> {
+        await this.db.delete(products).where(eq(products.id, id.getValue()));
+    }
+
     private static toPersistence(product: Product): typeof products.$inferInsert {
         return {
             id: product.id.getValue(),

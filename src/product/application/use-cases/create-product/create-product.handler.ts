@@ -10,7 +10,7 @@ import { Sku } from '../../../../product/domain/value-objects/sku.vo';
 import { ApplicationException, ApplicationExceptionCode } from '../../../../shared/domain/exceptions/application.exception';
 
 @CommandHandler(CreateProductCommand)
-export class CreateProductHandler implements ICommandHandler<CreateProductCommand> {
+export class CreateProductHandler implements ICommandHandler<CreateProductCommand, void> {
     constructor(
         @Inject(PRODUCT_REPOSITORY)
         private readonly productRepository: ProductRepository,
