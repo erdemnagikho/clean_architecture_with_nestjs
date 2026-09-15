@@ -1,8 +1,8 @@
-import { AggregateRoot } from "src/shared/domain/aggregate-root";
+import { AggregateRoot } from "../../../shared/domain/aggregate-root";
 import { ProductId } from "../value-objects/product-id.vo";
 import { Sku } from "../value-objects/sku.vo";
-import { Money } from "src/shared/domain/value-objects/money.vo";
-import { DomainException } from "src/shared/domain/exceptions/domain.exception";
+import { Money } from "../../../shared/domain/value-objects/money.vo";
+import { DomainException } from "../../../shared/domain/exceptions/domain.exception";
 
 export interface ProductProps {
     id: ProductId;
