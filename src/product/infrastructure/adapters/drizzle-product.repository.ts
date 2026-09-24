@@ -4,9 +4,9 @@ import { DRIZZLE } from "../../../shared/infrastructure/database/postgres/drizzl
 import type { DrizzleDB } from '../../../shared/infrastructure/database/postgres/drizzle.provider'
 import { Product } from "../../domain/entities/product.entity";
 import { products } from "../../../shared/infrastructure/database/postgres/schema/product.schema";
-import { ProductId } from "src/product/domain/value-objects/product-id.vo";
-import { Sku } from "src/product/domain/value-objects/sku.vo";
-import { Money } from "src/shared/domain/value-objects/money.vo";
+import { ProductId } from "../../../product/domain/value-objects/product-id.vo";
+import { Sku } from "../../../product/domain/value-objects/sku.vo";
+import { Money } from "../../../shared/domain/value-objects/money.vo";
 import { eq, SQL, gte, lte, and } from "drizzle-orm";
 
 @Injectable()

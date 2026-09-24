@@ -1,4 +1,4 @@
-import { Sku } from "src/product/domain/value-objects/sku.vo";
+import { Sku } from "../../../product/domain/value-objects/sku.vo";
 import { ProductId } from "../../../product/domain/value-objects/product-id.vo";
 import { Product } from "../../domain/entities/product.entity";
 

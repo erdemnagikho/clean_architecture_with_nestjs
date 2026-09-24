@@ -1,4 +1,4 @@
-import { DomainException } from "src/shared/domain/exceptions/domain.exception";
+import { DomainException } from "../../../shared/domain/exceptions/domain.exception";
 
 export class Sku {
     private static readonly SKU_PATTERN = /^[A-Za-z0-9-]+$/;

@@ -1,5 +1,5 @@
 import { ExceptionFilter, HttpStatus, Catch, ArgumentsHost } from "@nestjs/common";
-import { ApplicationException, ApplicationExceptionCode } from "src/shared/domain/exceptions/application.exception";
+import { ApplicationException, ApplicationExceptionCode } from "../../../shared/domain/exceptions/application.exception";
 import { Response } from 'express';
 
 const CODE_TO_HTTP: Record<ApplicationExceptionCode, HttpStatus> = {
