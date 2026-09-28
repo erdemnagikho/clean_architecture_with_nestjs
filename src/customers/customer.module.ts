@@ -4,16 +4,24 @@ import { DrizzleCustomerRepository } from "./infrastructure/adapters/drizzle-cus
 import { CommandHandlers } from "./application/use-cases";
 import { CustomerController } from "./presentation/customer.controller";
 import { QueryHandlers } from "./application/queries/handlers";
+import { EventHandlers } from "./application/events";
+import { NOTIFICATION_SERVICE } from "./application/ports/notification.port";
+import { NodemailerEmailAdapter } from "./infrastructure/adapters/nodemailer-notification.adapter";
 
 @Module({
     controllers: [CustomerController],
     providers: [
         ...CommandHandlers,
         ...QueryHandlers,
+        ...EventHandlers,
         {
             provide: CUSTOMER_REPOSITORY,
-            useClass: DrizzleCustomerRepository
-        }
-    ]
+            useClass: DrizzleCustomerRepository,
+        },
+        {
+            provide: NOTIFICATION_SERVICE,
+            useClass: NodemailerEmailAdapter,
+        },
+    ],
 })
 export class CustomerModule { }
