@@ -1,13 +1,36 @@
 import { Module } from "@nestjs/common";
-import { ORDER_REPOSITORY } from "./domain/ports/order.repository.port";
+import { ORDER_REPOSITORY } from "./application/ports/order.repository.port";
 import { DrizzleOrderRepository } from "./infrastructure/adapter/drizzle-order.repository";
+import { CommandHandlers } from "./application/use-cases";
+import { OrderController } from "./presentation/order.controller";
+import { CUSTOMER } from "./application/ports/customer.port";
+import { CustomerAdapter } from "./infrastructure/adapter/customer.adapter";
+import { PRODUCT } from "./application/ports/product.port";
+import { ProductAdapter } from "./infrastructure/adapter/product.adapter";
+import { CustomerModule } from "../customers/customer.module";
+import { ProductModule } from "../product/product.module";
+import { EventHandlers } from "./application/events";
+import { QueryHandlers } from "./application/queries/handlers";
 
 @Module({
+    imports: [CustomerModule, ProductModule],
+    controllers: [OrderController],
     providers: [
+        ...CommandHandlers,
+        ...EventHandlers,
+        ...QueryHandlers,
         {
             provide: ORDER_REPOSITORY,
             useClass: DrizzleOrderRepository,
         },
+        {
+            provide: CUSTOMER,
+            useClass: CustomerAdapter,
+        },
+        {
+            provide: PRODUCT,
+            useClass: ProductAdapter,
+        }
     ],
 })
 export class OrderModule { }

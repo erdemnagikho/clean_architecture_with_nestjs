@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { and, eq, notInArray } from 'drizzle-orm';
-import { OrderRepository } from "../../domain/ports/order.repository.port";
+import { OrderRepository } from "../../application/ports/order.repository.port";
 import { DRIZZLE, DrizzleDB } from "../../../shared/infrastructure/database/postgres/drizzle.provider";
 import { Order } from "../../domain/entities/order.entity";
 import { orderItems, orders } from "../../../shared/infrastructure/database/postgres/schema";
