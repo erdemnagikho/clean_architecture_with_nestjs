@@ -1,5 +1,5 @@
 import { EventsHandler, IEventHandler } from "@nestjs/cqrs";
-import { CustomerRegisteredEvent } from "../../../product/domain/events/customer-registered.event";
+import { CustomerRegisteredEvent } from "../../domain/events/customer-registered.event";
 import { Inject } from "@nestjs/common";
 import { NOTIFICATION_SERVICE, NotificationPort } from "../ports/notification.port";
 

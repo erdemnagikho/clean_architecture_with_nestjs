@@ -1,4 +1,4 @@
-import { CustomerRegisteredEvent } from '../../../product/domain/events/customer-registered.event';
+import { CustomerRegisteredEvent } from '../events/customer-registered.event';
 import { AggregateRoot } from '../../../shared/domain/aggregate-root';
 import { CustomerId } from '../value-objects/customer-id.vo';
 import { Email } from '../value-objects/email.vo';
