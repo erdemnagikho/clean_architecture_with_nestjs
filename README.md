@@ -215,6 +215,13 @@ npm run build
 npm run start:prod
 ```
 
+### 📖 Interactive API Documentation (Swagger / OpenAPI)
+
+Once the application is running, access the interactive Swagger UI documentation at:
+
+- **Swagger UI:** [http://localhost:3000/docs](http://localhost:3000/docs)
+- **OpenAPI JSON Spec:** [http://localhost:3000/docs-json](http://localhost:3000/docs-json)
+
 ---
 
 ## 📡 API Reference
