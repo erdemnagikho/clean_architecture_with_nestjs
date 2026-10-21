@@ -1,98 +1,371 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🛍️ Clean Shop — NestJS Clean Architecture & DDD Showcase
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-grade, modular e-commerce backend built with **NestJS**, adhering strictly to the principles of **Clean Architecture (Hexagonal / Ports & Adapters)**, **Domain-Driven Design (DDD)**, and **CQRS (Command Query Responsibility Segregation)** with event-driven **Sagas**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 📑 Table of Contents
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- [Architectural Highlights](#-architectural-highlights)
+- [Tech Stack](#-tech-stack)
+- [Project Structure & Layers](#-project-structure--layers)
+- [Module Breakdown](#-module-breakdown)
+- [Order Fulfillment Workflow (Saga Pattern)](#-order-fulfillment-workflow-saga-pattern)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Environment Setup](#environment-setup)
+  - [Running Infrastructure (Docker Compose)](#running-infrastructure-docker-compose)
+  - [Database Migrations (Drizzle ORM)](#database-migrations-drizzle-orm)
+  - [Stripe Webhook Listener](#stripe-webhook-listener)
+  - [Starting the Application](#starting-the-application)
+- [API Reference](#-api-reference)
+  - [Customers](#1-customers-customers)
+  - [Products](#2-products-products)
+  - [Orders](#3-orders-orders)
+  - [Payments](#4-payments-payments)
+- [Scripts](#-scripts)
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 🏛️ Architectural Highlights
+
+- **Clean Architecture & Hexagonal Ports & Adapters:** Complete decoupling of business logic from frameworks, ORMs, and third-party delivery mechanisms. Domain and Application layers hold no infrastructure dependencies.
+- **Domain-Driven Design (DDD):**
+  - **Aggregates & Entities:** Rich domain models encapsulating business invariants and state transitions (e.g., `Order`, `Payment`, `Customer`, `Product`).
+  - **Value Objects:** Immutable objects with self-validation (`Money`, `Email`, `OrderId`, `OrderStatus`, `ShippingAddress`, `Sku`).
+  - **Domain Events:** Decoupled event propagation for cross-boundary side-effects (`OrderPlacedEvent`, `OrderConfirmedEvent`, `OrderShippedEvent`, `PaymentCompletedEvent`).
+- **CQRS (Command Query Responsibility Segregation):**
+  - **Commands (`CommandBus`):** Intent-driven mutation use cases with transactional consistency.
+  - **Queries (`QueryBus`):** Optimized read operations returning presentation DTOs without domain mutation overhead.
+- **Saga Pattern (Reactivity with RxJS):**
+  - Cross-module distributed orchestration using `@Saga()` handlers. Reacts to domain events (e.g., `PaymentCompletedEvent`) and dispatches compensating/subsequent commands (e.g., `ConfirmOrderCommand`) asynchronously.
+- **Polyglot Persistence:**
+  - Dynamic repository injection via dependency inversion: The `Product` module seamlessly switches between **PostgreSQL (Drizzle ORM)** and **MongoDB** based on environment configuration (`DATABASE=postgres` or `DATABASE=mongodb`).
+- **Domain Exception Handling:** Custom global exception filters (`DomainExceptionFilter`, `ApplicationExceptionFilter`) mapping business rule errors to appropriate semantic HTTP status codes.
+
+---
+
+## 🧰 Tech Stack
+
+| Technology | Purpose |
+| :--- | :--- |
+| **[NestJS 11](https://nestjs.com/)** | Extensible enterprise Node.js framework |
+| **[@nestjs/cqrs](https://docs.nestjs.com/recipes/cqrs)** | CQRS buses (CommandBus, QueryBus, EventBus, Saga) |
+| **[TypeScript 5.7](https://www.typescriptlang.org/)** | Strongly typed JavaScript |
+| **[Drizzle ORM 0.45](https://orm.drizzle.team/)** | High-performance TypeScript ORM for PostgreSQL |
+| **[PostgreSQL](https://www.postgresql.org/)** | Primary relational database |
+| **[MongoDB](https://www.mongodb.com/)** | Document database for catalog polyglot persistence |
+| **[Stripe SDK](https://stripe.com)** | Payment processing via Checkout Sessions & Webhooks |
+| **[Nodemailer](https://nodemailer.com/)** | Transactional email notifications |
+| **[Docker & Compose](https://www.docker.com/)** | Local infrastructure containerization |
+
+---
+
+## 📂 Project Structure & Layers
+
+Every bounded context follows a strictly enforced 4-layer architecture:
+
+```
+src/{module-name}/
+├── domain/                      # 1. Domain Layer (Pure TypeScript)
+│   ├── entities/                # Aggregate Roots and Entities
+│   ├── value-objects/           # Self-validating Value Objects
+│   └── events/                  # Domain Events
+├── application/                 # 2. Application Layer (Use Cases)
+│   ├── ports/                   # Inbound & Outbound Interfaces (Repositories, Services)
+│   ├── use-cases/               # Command definitions & CommandHandlers
+│   ├── queries/                 # Query definitions & QueryHandlers
+│   ├── events/                  # EventHandlers
+│   └── sagas/                   # Reactive Sagas (cross-module coordination)
+├── infrastructure/              # 3. Infrastructure Layer (Adapters)
+│   └── adapters/                # Drizzle ORM, MongoDB, Stripe, Nodemailer implementations
+└── presentation/                # 4. Presentation Layer (Delivery)
+    ├── dtos/                    # Request & Response Data Transfer Objects
+    └── {name}.controller.ts     # HTTP REST Controllers
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 📦 Module Breakdown
 
-# watch mode
-$ npm run start:dev
+1. **`customers` (`/customers`):**
+   - Customer registration, management, and profile lookups.
+   - Dispatches transactional welcome / notification emails via `NotificationPort` adapters.
+2. **`product` (`/products`):**
+   - Catalog management supporting polyglot persistence (switchable between PostgreSQL and MongoDB).
+3. **`order` (`/orders`):**
+   - Manages order lifecycles: `PENDING` ➔ `CONFIRMED` ➔ `SHIPPED` ➔ `DELIVERED` (or `CANCELLED`).
+   - Verifies customer and product existence through decoupled ports (`CustomerPort`, `ProductPort`) rather than direct database joins.
+   - Houses the `OrderFulfillmentSaga` to coordinate cross-context order fulfillment.
+4. **`payment` (`/payments`):**
+   - Handles Stripe Checkout session creation and processes cryptographically signed Stripe webhooks (`/payments/webhook`).
+   - Emits `PaymentCompletedEvent` upon successful payment verification.
+5. **`shared`:**
+   - Common base classes (`AggregateRoot`, `Entity`, `Money`, `UniqueId`).
+   - Shared database providers (Drizzle PostgreSQL & MongoDB).
+   - Global HTTP exception filters for domain exceptions.
 
-# production mode
-$ npm run start:prod
+---
+
+## 🔄 Order Fulfillment Workflow (Saga Pattern)
+
+The payment and fulfillment cycle is decoupled across modules through domain events and the **Saga Pattern**:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer
+    participant API as Order & Payment APIs
+    participant Stripe as Stripe Gateway
+    participant OrderModule as Order Module
+    participant PaymentModule as Payment Module
+    participant Saga as OrderFulfillmentSaga
+    participant Notification as Notification Service
+
+    Customer->>API: 1. POST /orders (Place Order)
+    API->>OrderModule: PlaceOrderCommand
+    OrderModule-->>Customer: Order placed (Status: PENDING)
+
+    Customer->>API: 2. POST /payments (Initiate Checkout)
+    API->>PaymentModule: CreatePaymentCommand
+    PaymentModule->>Stripe: Create Checkout Session
+    PaymentModule-->>Customer: Returns Stripe Checkout URL
+
+    Customer->>Stripe: 3. Pays on Stripe Checkout
+    Stripe->>API: 4. POST /payments/webhook (checkout.session.completed)
+    API->>PaymentModule: ConfirmPaymentCommand
+    PaymentModule->>PaymentModule: Complete Payment (Status: SUCCEEDED)
+    PaymentModule--)Saga: Emits PaymentCompletedEvent
+
+    Note over Saga: Reactive Saga intercepts event
+    Saga->>OrderModule: Dispatches ConfirmOrderCommand(orderId)
+    OrderModule->>OrderModule: Order.confirm() (Status: CONFIRMED)
+    OrderModule--)Notification: Emits OrderConfirmedEvent
+    Notification->>Customer: Sends "Order Ready to Ship" Email
 ```
 
-## Run tests
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (>= 20.x recommended)
+- [npm](https://www.npmjs.com/) (>= 10.x)
+- [Docker](https://www.docker.com/) & Docker Compose
+- [Stripe CLI](https://stripe.com/docs/stripe-cli) (for local webhook testing)
+
+### Environment Setup
+
+Copy the example environment file and configure your credentials:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
 ```
 
-## Deployment
+Key environment variables:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `POSTGRES_DATABASE_URL` | PostgreSQL connection URL | `postgresql://postgres:postgres@localhost:5432/clean_shop` |
+| `MONGODB_URI` | MongoDB connection URI | `mongodb://localhost:27017` |
+| `DATABASE` | Product repository provider (`postgres` or `mongodb`) | `postgres` |
+| `SMTP_HOST` / `SMTP_PORT` | SMTP provider settings (e.g. Mailtrap) | `sandbox.smtp.mailtrap.io:2525` |
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_test_...`) | — |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_...`) | — |
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Running Infrastructure (Docker Compose)
+
+Spin up local PostgreSQL and MongoDB containers:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker-compose up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Database Migrations (Drizzle ORM)
 
-## Resources
+Apply database schema migrations to PostgreSQL:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+# Generate new migration files if schema changes:
+npx drizzle-kit generate
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Run pending migrations:
+npx drizzle-kit migrate
+```
 
-## Support
+### Stripe Webhook Listener
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+For local testing, use the Stripe CLI to forward events directly to your local application:
 
-## Stay in touch
+```bash
+stripe listen --forward-to localhost:3000/payments/webhook
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Copy the printed webhook signing secret (`whsec_...`) into your `.env` file under `STRIPE_WEBHOOK_SECRET`.
 
-## License
+### Starting the Application
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+# Development mode with hot-reload
+npm run start:dev
+
+# Production build
+npm run build
+npm run start:prod
+```
+
+---
+
+## 📡 API Reference
+
+### 1. Customers (`/customers`)
+
+#### Register a Customer
+- **Method:** `POST /customers`
+- **Body:**
+```json
+{
+  "email": "customer@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "+1234567890"
+}
+```
+
+#### List Customers
+- **Method:** `GET /customers`
+
+#### Get Customer by ID
+- **Method:** `GET /customers/:id`
+
+#### Delete Customer
+- **Method:** `DELETE /customers/:id`
+
+---
+
+### 2. Products (`/products`)
+
+#### Create a Product
+- **Method:** `POST /products`
+- **Body:**
+```json
+{
+  "name": "Mechanical Keyboard",
+  "price": 149.99,
+  "currency": "USD",
+  "sku": "KB-MECH-001"
+}
+```
+
+#### List Products
+- **Method:** `GET /products`
+
+#### Get Product by ID
+- **Method:** `GET /products/:id`
+
+#### Delete Product
+- **Method:** `DELETE /products/:id`
+
+---
+
+### 3. Orders (`/orders`)
+
+#### Place an Order
+- **Method:** `POST /orders`
+- **Body:**
+```json
+{
+  "customerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "items": [
+    {
+      "productId": "4fa85f64-5717-4562-b3fc-2c963f66afa7",
+      "productName": "Mechanical Keyboard",
+      "unitPrice": 149.99,
+      "currency": "USD",
+      "quantity": 1,
+      "discount": 0
+    }
+  ],
+  "shippingStreet": "123 Main St",
+  "shippingCity": "San Francisco",
+  "shippingState": "CA",
+  "shippingZipCode": "94101",
+  "shippingCountry": "USA"
+}
+```
+
+#### List Orders
+- **Method:** `GET /orders` *(Optional query parameter: `?customerId=<uuid>`)*
+
+#### Get Order by ID
+- **Method:** `GET /orders/:id`
+
+#### Ship Order
+- **Method:** `PATCH /orders/:id/ship`
+- **Body:**
+```json
+{
+  "trackingNumber": "TRK-9876543210"
+}
+```
+
+#### Deliver Order
+- **Method:** `PATCH /orders/:id/deliver`
+
+#### Cancel Order
+- **Method:** `PATCH /orders/:id/cancel`
+- **Body:**
+```json
+{
+  "reason": "Customer requested cancellation"
+}
+```
+
+---
+
+### 4. Payments (`/payments`)
+
+#### Create Checkout Session
+- **Method:** `POST /payments`
+- **Body:**
+```json
+{
+  "orderId": "6fd56de6-e0e6-481e-947c-9029aab4f8ec",
+  "successUrl": "http://localhost:3000/orders/success",
+  "cancelUrl": "http://localhost:3000/orders/cancel"
+}
+```
+- **Response:**
+```json
+{
+  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_test_..."
+}
+```
+
+#### Stripe Webhook
+- **Method:** `POST /payments/webhook`
+- **Headers:** `stripe-signature: <signature>`
+- **Body:** Raw payload from Stripe. Dispatches `ConfirmPaymentCommand` on `checkout.session.completed`.
+
+---
+
+## 🛠️ Scripts
+
+```bash
+# Code Quality
+npm run format      # Prettier formatting
+npm run lint        # ESLint check with auto-fix
+
+# Testing
+npm run test        # Unit tests
+npm run test:watch  # Unit tests in watch mode
+npm run test:cov    # Test coverage report
+npm run test:e2e    # End-to-end tests
+
+# Database (Drizzle)
+npx drizzle-kit generate  # Generate migration SQL
+npx drizzle-kit migrate   # Execute migrations
+```
+
+---

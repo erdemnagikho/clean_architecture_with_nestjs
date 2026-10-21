@@ -31,6 +31,16 @@ export class DrizzlePaymentRepository implements PaymentRepository {
             });
     }
 
+    async findById(id: PaymentId): Promise<Payment | null> {
+        const row = await this.db.query.payments.findFirst({
+            where: eq(payments.id, id.getValue()),
+        });
+
+        if (!row) return null;
+
+        return DrizzlePaymentRepository.toDomain(row);
+    }
+
     async findByOrderId(orderId: UniqueId): Promise<Payment | null> {
         const row = await this.db.query.payments.findFirst({
             where: eq(payments.orderId, orderId.getValue()),
